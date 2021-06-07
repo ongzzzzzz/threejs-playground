@@ -1,0 +1,10 @@
+@import url("https://fonts.googleapis.com/css?family=Press+Start+2P");
+
+#score {
+	position: absolute;
+	width: 10px;
+	font-family: "Press Start 2P", cursive;
+	font-size: 1.2em;
+	color: white;
+	transform: translate(20vw, 45vh);
+}
