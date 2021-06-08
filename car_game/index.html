@@ -3,28 +3,49 @@
 
 <head>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>car game</title>
+
 	<style>
 		body {
 			margin: 0;
 		}
 	</style>
+	
 	<link rel="stylesheet" href="style.css">
+	<script src="//cdn.jsdelivr.net/npm/eruda">
+	</script>
+	<script>
+		eruda.init();
+	</script>
 </head>
 
 <body>
 
-	<div id="score">Press Up</div>
-	<script src="https://threejs.org/build/three.js">
+	<div id="wrapper">
+		<div id="score">Press Up</div>
+
+		<div class="btn-container">
+			<div id="up" class="button">🔼</div>
+			<div id="down" class="button">🔽</div>
+		</div>
+	</div>
+
+
+	<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js/build/three.min.js">
+
 	</script>
 
 	<script src="sprites.js">
+
 	</script>
 
 	<script src="track.js">
+
 	</script>
 
 	<script src="script.js">
+
 	</script>
 </body>
 

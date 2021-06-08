@@ -1,9 +1,14 @@
 /* TODO: 
 spawn trees
-mobile support (button)
-multiplayer
-chat?
+
+add animation for new car come in
+multiplayer (choose car color and customize)
+like tetris? chat?
+sound effect
+powerup
+
 */
+
 
 // SCENE
 const scene = new THREE.Scene();
@@ -50,45 +55,35 @@ camera.position.set(0, -210, 300);
 // camera.up.set(0, 0, 1);
 camera.lookAt(0, 0, 0);
 
-/* 
-Commented to design sprites:
-* camera
-* inside movePlayerCar() 
-* playercar
-* renderMap
-*/
-
-// const aspectRatio = window.innerWidth / window.innerHeight;
-// const cameraWidth = 200;
-// const cameraHeight = cameraWidth / aspectRatio;
-// const camera = new THREE.OrthographicCamera(
-// 	cameraWidth / -2,
-// 	cameraWidth / 2,
-// 	cameraHeight / 2,
-// 	cameraHeight / -2,
-// 	0,
-// 	1000
-// );
-// camera.position.set(200, -200, 300);
-// // // change upwards position to be z-axis; default is y pointing up 
-// camera.up.set(0, 0, 1);
-// camera.lookAt(0, 0, 0);
-
-
 renderMap(cameraWidth, cameraHeight * 2);
+// renderMap(window.innerWidth, window.innerHeight);
 
 
 // RENDERER
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
+
+var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+if (isMobile) {
+	renderer.setSize(window.innerHeight, window.innerHeight * (window.innerHeight / window.innerWidth));
+	renderer.domElement.style.transform =
+		`translate(0, ${
+		(-0.5 * (window.innerHeight / window.innerWidth) * window.innerHeight) +
+		(0.5 * window.innerWidth)
+		}px)`;
+} else {
+	renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
 renderer.render(scene, camera);
 
-document.body.appendChild(renderer.domElement);
+// document.body.appendChild(renderer.domElement);
+document.getElementById("wrapper").appendChild(renderer.domElement);
 
 
 
 // GAME LOGIC
 let ready, score;
+let gameOver;
 let playerAngleMoved;
 const scoreElement = document.getElementById("score");
 let otherVehicles = [];
@@ -101,11 +96,15 @@ reset();
 
 function reset() {
 	// score and position
+	gameOver = false;
 	playerAngleMoved = 0;
 	movePlayerCar(0);
 	score = 0;
-	scoreElement.innerText = "Up to accelerate Down to decelerate";
 	lastTimestamp = undefined;
+
+	scoreElement.innerText = "Up to accelerate Down to decelerate";
+	document.getElementById("up").innerText = "🔼";
+	document.getElementById("down").innerText = "🔽";
 
 	// remove all otherVehicles
 	otherVehicles.forEach((vehicle) => {
@@ -130,11 +129,30 @@ function startGame() {
 	}
 }
 
+function resizeRendererToDisplaySize(renderer) {
+	const canvas = renderer.domElement;
+	const width = canvas.clientWidth;
+	const height = canvas.clientHeight;
+	const needResize = canvas.width !== width || canvas.height !== height;
+	if (needResize) {
+		renderer.setSize(width, height, false);
+	}
+	return needResize;
+}
+
 function animation(timestamp) {
 	if (!lastTimestamp) {
 		lastTimestamp = timestamp;
 		return;
 	}
+
+
+	if (resizeRendererToDisplaySize(renderer)) {
+		const canvas = renderer.domElement;
+		camera.aspect = canvas.clientWidth / canvas.clientHeight;
+		camera.updateProjectionMatrix();
+	}
+
 
 	const dt = timestamp - lastTimestamp;
 
@@ -158,42 +176,87 @@ function animation(timestamp) {
 	lastTimestamp = timestamp;
 }
 
-
-
-
-
-window.addEventListener("keydown", function (event) {
-	if (event.key == "ArrowUp") {
+function upPressed(event) {
+	// event.preventDefault();
+	if (!gameOver) {
 		startGame();
 		accelerate = true;
 		return;
 	}
-
-	if (event.key == "ArrowDown") {
-		decelerate = true;
-		return;
-	}
-
-	if (event.key == "R" || event.key == "r") {
+	else {
 		reset();
 		return;
 	}
-});
+}
 
-window.addEventListener("keyup", function (event) {
-	if (event.key == "ArrowUp") {
-		accelerate = false;
+function upReleased(event) {
+	// event.preventDefault();
+	accelerate = false;
+	return;
+}
+
+function downPressed(event) {
+	// event.preventDefault();
+	if (!gameOver) {
+		decelerate = true;
 		return;
 	}
-
-	if (event.key == "ArrowDown") {
-		decelerate = false;
+	else {
+		window.open("https://github.com/Fogeinator/threejs-playground/", "_blank");
 		return;
 	}
+}
+
+function downReleased(event) {
+	// event.preventDefault();
+	decelerate = false;
+	return;
+}
+
+window.onload = (() => {
+	document.getElementById("up").addEventListener("mousedown", upPressed);
+	document.getElementById("up").addEventListener("mouseup", upReleased);
+	document.getElementById("up").addEventListener("touchstart", upPressed, false);
+	document.getElementById("up").addEventListener("touchend", upReleased, false);
+
+	document.getElementById("down").addEventListener("mousedown", downPressed);
+	document.getElementById("down").addEventListener("mouseup", downReleased);
+	document.getElementById("down").addEventListener("touchstart", downPressed, false);
+	document.getElementById("down").addEventListener("touchend", downReleased, false);
+
+
+	window.addEventListener("keydown", function (event) {
+		if (event.key == "ArrowUp") {
+			startGame();
+			accelerate = true;
+			return;
+		}
+
+		if (event.key == "ArrowDown") {
+			decelerate = true;
+			return;
+		}
+
+		if (event.key == "R" || event.key == "r") {
+			reset();
+			return;
+		}
+	});
+
+	window.addEventListener("keyup", function (event) {
+		if (event.key == "ArrowUp") {
+			accelerate = false;
+			return;
+		}
+
+		if (event.key == "ArrowDown") {
+			decelerate = false;
+			return;
+		}
+	});
+
+
 });
-
-
-
 
 
 
@@ -235,6 +298,7 @@ function movePlayerCar(dt) {
 }
 
 function getPlayerSpeed() {
+	// if (accelerate)	console.log({accelerate})
 	if (accelerate) return speed * 2;
 	if (decelerate) return speed * 0.5;
 	return speed;
@@ -413,8 +477,8 @@ function moveOtherVehicles(dt) {
 						vehicle.mesh.position,
 						vehicle.angle,
 						vehicle.clockwise,
-						idx == 0 ? 
-							-2.5 * carHitZoneRadius : 
+						idx == 0 ?
+							-2.5 * carHitZoneRadius :
 							idx == 1 ? 0 :
 								+2.5 * carHitZoneRadius
 					);
@@ -539,7 +603,10 @@ function hitDetection() {
 	// can set other game logic here
 
 	if (hit) {
-		scoreElement.innerText = "Press R to restart"
+		scoreElement.innerText = "Press R to restart";
+		document.getElementById("up").innerText = "🔄";
+		document.getElementById("down").innerText = "👨‍💻";
+		gameOver = true;
 		renderer.setAnimationLoop(null);
 	}
 
